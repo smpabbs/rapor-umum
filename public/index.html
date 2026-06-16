@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>e-Rapor V2.5</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="head-left">
+      <h1>Sistem e-Rapor</h1>
+      <p id="header-school">V2.5 — Upload Excel</p>
+    </div>
+    <div class="head-right">
+      <button id="btn-settings" class="btn-ghost" style="display:none">&#128295; Pengaturan</button>
+      <button id="btn-upload-lagi" class="btn-ghost" style="display:none">&#8635; Upload Ulang</button>
+    </div>
+  </header>
+
+  <!-- Setup: welcome + upload -->
+  <div id="setup-section">
+
+    <!-- Welcome / instruksi -->
+    <div class="welcome-card">
+      <div class="welcome-icon">&#127891;</div>
+      <h2>e-Rapor V2.5</h2>
+      <p class="welcome-desc">
+        Aplikasi cetak rapor berbasis web — <strong>100% offline</strong>, langsung pakai tanpa instalasi database.
+        Cukup upload file Excel leger nilai, isi pengaturan, lalu cetak rapor per siswa atau per kelas.
+      </p>
+      <div class="steps">
+        <div class="step"><span class="step-num">1</span> <a href="/api/download-sample" class="step-link">Download sample Excel</a> &#8594; isi nilai sesuai kolom</div>
+        <div class="step"><span class="step-num">2</span> Upload file Excel leger nilai di bawah</div>
+        <div class="step"><span class="step-num">3</span> Klik <strong>Buka Rapor</strong> &#8594; pilih kelas &#8594; pilih siswa</div>
+        <div class="step"><span class="step-num">4</span> Atur identitas sekolah, TTD, dan wali kelas lewat tombol <strong>&#128295; Pengaturan</strong></div>
+        <div class="step"><span class="step-num">5</span> Cetak rapor dengan tombol <strong>&#128424; Cetak / PDF</strong></div>
+      </div>
+    </div>
+
+    <div class="setup-single">
+      <div class="card">
+        <h2>&#128196; Upload Leger Nilai</h2>
+        <p>Upload file Excel (.xlsx) leger nilai — kolom harus sesuai format. Download sample di atas jika perlu.</p>
+        <form id="upload-form">
+          <input type="file" id="file-input" accept=".xlsx,.xls">
+          <button type="submit">Upload &amp; Proses</button>
+        </form>
+        <div id="upload-status"></div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:16px">
+      <button id="btn-load-rapor" class="btn-open" style="display:none">Buka Rapor &rarr;</button>
+    </div>
+  </div>
+
+  <!-- Workspace: filter + list (kiri) & preview (kanan) -->
+  <div id="workspace" style="display:none">
+    <div id="panel-list" class="card">
+      <div class="filter-bar">
+        <select id="kelas-select">
+          <option value="">-- Pilih Kelas --</option>
+        </select>
+        <input type="text" id="search-input" placeholder="Cari nama..." disabled>
+      </div>
+      <div id="list-hint" class="hint">Pilih kelas untuk menampilkan daftar siswa.</div>
+      <div id="list-wrap">
+        <table id="siswa-table">
+          <thead>
+            <tr><th class="c-no">No</th><th>Nama</th><th class="c-nisn">NISN</th><th class="c-act"></th></tr>
+          </thead>
+          <tbody id="siswa-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="panel-preview" class="card">
+      <div class="preview-head">
+        <span id="preview-title">Pratinjau Rapor</span>
+        <div class="preview-nav">
+          <button id="btn-prev" class="btn-nav" disabled title="Siswa sebelumnya">&#8249;</button>
+          <span id="nav-pos" class="nav-pos">&ndash;</span>
+          <button id="btn-next" class="btn-nav" disabled title="Siswa berikutnya">&#8250;</button>
+        </div>
+        <div class="preview-actions">
+          <span id="zoom-label" class="zoom-label"></span>
+          <button id="btn-print" class="btn-secondary" disabled>&#128424; Cetak / PDF</button>
+          <button id="btn-print-kelas" class="btn-secondary" disabled title="Cetak semua siswa di kelas ini">&#128424; Cetak 1 Kelas</button>
+          <button id="btn-newtab" class="btn-ghost" disabled>&#8599; Tab Baru</button>
+        </div>
+      </div>
+      <div class="doc-bar">
+        <span class="doc-bar-label">Dokumen:</span>
+        <label><input type="checkbox" id="doc-rapor" checked> Rapor</label>
+        <label><input type="checkbox" id="doc-mutasi"> Mutasi</label>
+      </div>
+      <div id="preview-body">
+        <div id="preview-empty">Pilih siswa dari daftar untuk melihat rapor di sini.</div>
+        <div id="preview-scaler" style="display:none"><iframe id="preview-frame" title="Pratinjau Rapor" scrolling="no"></iframe></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal Pengaturan ===== -->
+<div id="settings-modal" class="modal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h2>&#128295; Pengaturan</h2>
+      <button id="btn-close-settings" class="btn-x">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-bar">
+        <button class="tab active" data-tab="sekolah">&#127979; Identitas</button>
+        <button class="tab" data-tab="kepsek">&#128100; Kepala Sekolah</button>
+        <button class="tab" data-tab="wk">&#128101; Wali Kelas</button>
+      </div>
+
+      <!-- Tab: Identitas Sekolah -->
+      <div class="tab-pane" id="pane-sekolah">
+        <div class="cfg-row">
+          <div class="cfg-cell full"><label>Nama Sekolah</label><input type="text" id="id-nama" placeholder="SMP ABBS Surakarta"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-cell grow"><label>Alamat</label><input type="text" id="id-alamat" placeholder="JL. Taruma Negara 3 Banyuanyar"></div>
+          <div class="cfg-cell s140"><label>Kota</label><input type="text" id="id-kota" placeholder="Surakarta"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-cell s130"><label>Semester</label><select id="id-semester"><option value="1">Semester 1</option><option value="2" selected>Semester 2</option></select></div>
+          <div class="cfg-cell grow"><label>Tahun Ajaran</label><input type="text" id="id-tahun" placeholder="2025/2026"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-cell full"><label>Logo Sekolah</label>
+            <div class="logo-upload" style="margin-top:2px">
+              <input type="file" id="id-logo" accept="image/*">
+              <div id="logo-preview" class="logo-preview" style="display:none">
+                <img id="logo-img" alt="Logo">
+                <button type="button" id="btn-logo-hapus" class="btn-ghost small">&#128465; Hapus</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Kepala Sekolah -->
+      <div class="tab-pane" id="pane-kepsek" style="display:none">
+        <div class="cfg-row">
+          <div class="cfg-cell grow"><label>Nama Kepala Sekolah</label><input type="text" id="id-kepsek" placeholder="Tri Wijayanti, M.Pd"></div>
+          <div class="cfg-cell s160"><label>NIP</label><input type="text" id="id-nip-kepsek" placeholder="NIP. -"></div>
+        </div>
+        <div class="cfg-row">
+          <div class="cfg-cell s150"><label>Tanggal Rapor</label><input type="date" id="tgl-rapor"></div>
+          <div class="cfg-cell grow" style="justify-content:flex-end"><span class="sec-note" style="margin:0">Tanggal kelulusan mengikuti tanggal rapor</span></div>
+        </div>
+        <div style="margin-top:8px"><label style="font-size:11px;font-weight:600;color:#5a6b78;text-transform:uppercase;letter-spacing:0.2px;display:block;margin-bottom:4px">Tanda Tangan</label></div>
+        <div class="sig-editor">
+          <div class="sig-stage-wrap">
+            <div class="sig-stage" id="ks-stage"><span class="stage-hint">Upload TTD di samping</span></div>
+          </div>
+          <div class="sig-controls">
+            <label class="filebtn">&#128247; Pilih Gambar TTD
+              <input type="file" id="ks-sig-file" accept="image/*">
+            </label>
+            <div class="ctl">
+              <span>Ukuran</span>
+              <input type="range" id="ks-w" min="40" max="320" value="110">
+              <output id="ks-w-val">110</output>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn-ghost" id="ks-center">&#10010; Tengahkan</button>
+              <button type="button" class="btn-ghost btn-clear-sig" data-target="ks">&#128465; Hapus</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab: Wali Kelas -->
+      <div class="tab-pane" id="pane-wk" style="display:none">
+        <div class="cfg-row">
+          <div class="cfg-cell s140"><label>Kelas</label><select id="wk-kelas"></select></div>
+          <div class="cfg-cell grow"><label>Nama Wali Kelas</label><input type="text" id="wk-name" placeholder="Nama wali kelas..."></div>
+        </div>
+        <div class="sig-editor">
+          <div class="sig-stage-wrap">
+            <div class="sig-stage" id="wk-stage"><span class="stage-hint">Upload TTD wali kelas</span></div>
+          </div>
+          <div class="sig-controls">
+            <label class="filebtn">&#128247; Pilih Gambar Tanda Tangan
+              <input type="file" id="wk-sig-file" accept="image/*">
+            </label>
+            <div class="ctl">
+              <span>Ukuran</span>
+              <input type="range" id="wk-w" min="40" max="320" value="110">
+              <output id="wk-w-val">110</output>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn-ghost" id="wk-center">&#10010; Tengahkan</button>
+              <button type="button" class="btn-ghost btn-clear-sig" data-target="wk">&#128465; Hapus TTD</button>
+            </div>
+            <p class="tip">Tip: seret gambar di kotak kiri untuk memindahkan posisinya.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="btn-save-settings">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading" style="display:none">
+  <div id="loading-box">
+    <div id="loading-spinner"></div>
+    <div id="loading-text">Memproses...</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
