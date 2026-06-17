@@ -677,7 +677,7 @@ function generateRaporHTML(s, opts) {
   <tr>
     <td class="lbl">Alamat</td>
     <td class="sep-col">:</td>
-    <td class="val" style="white-space:nowrap"><span class="sklh-alamat"></span></td>
+    <td class="val"><span class="sklh-alamat"></span></td>
     <td class="lbl2">Tahun Ajaran</td>
     <td class="sep-col2">:</td>
     <td class="val2">${tahunAjaran}</td>
