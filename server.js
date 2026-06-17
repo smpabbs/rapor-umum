@@ -1036,7 +1036,8 @@ ${keputusanBox}
       var w = (cfg.wali && cfg.wali[kelas]) || {};
       var k = cfg.kepsek || {};
       if (w.name) setText(source, '.wk-name', w.name);
-      if (k.name) setText(source, '.ks-name', k.name);
+      var ksName = k.name || ident.kepsek || '';
+      if (ksName) setText(source, '.ks-name', ksName);
       // NIP kepsek dari identitas atau pengaturan
       var nipVal = ident.nipKepsek || (k && k.nip) || '';
       if (nipVal) setText(source, '.ks-nip', (String(nipVal).indexOf('NIP') >= 0 ? '' : 'NIP. ') + nipVal);
